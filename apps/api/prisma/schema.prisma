@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MealGroup {
+  breakfast
+  lunch
+  dinner
+  snacks
+}
+
+model Food {
+  id                   String        @id @default(cuid())
+  name                 String
+  brand                String?
+  source               String
+  sourceId             String
+  defaultServingUnit   String?
+  defaultServingAmount Float?
+  caloriesPer100g      Float
+  proteinPer100g       Float
+  carbsPer100g         Float
+  fatPer100g           Float
+  rawPayloadJson       Json?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  servings             FoodServing[]
+  mealLogItems         MealLogItem[]
+  favoriteFoods        FavoriteFood[]
+
+  @@unique([source, sourceId])
+  @@index([name])
+}
+
+model FoodServing {
+  id             String   @id @default(cuid())
+  foodId         String
+  unitName       String
+  gramEquivalent Float
+  amountLabel    String?
+  createdAt      DateTime @default(now())
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@index([foodId])
+}
+
+model DailyLog {
+  id           String        @id @default(cuid())
+  logDate      DateTime      @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  mealLogItems MealLogItem[]
+}
+
+model MealLogItem {
+  id               String    @id @default(cuid())
+  dailyLogId       String
+  foodId           String
+  mealGroup        MealGroup
+  amount           Float
+  servingUnit      String
+  grams            Float
+  loggedAt         DateTime
+  caloriesSnapshot Float
+  proteinSnapshot  Float
+  carbsSnapshot    Float
+  fatSnapshot      Float
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  food     Food     @relation(fields: [foodId], references: [id], onDelete: Restrict)
+
+  @@index([dailyLogId])
+  @@index([foodId])
+  @@index([mealGroup])
+  @@index([loggedAt])
+}
+
+model NutritionGoal {
+  id          String   @id @default(cuid())
+  calorieGoal Float
+  proteinGoal Float
+  carbGoal    Float
+  fatGoal     Float
+  updatedAt   DateTime @updatedAt
+}
+
+model FavoriteFood {
+  id        String   @id @default(cuid())
+  foodId    String
+  createdAt DateTime @default(now())
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@unique([foodId])
+}

@@ -1,0 +1,23 @@
+{
+  "name": "food-tracker",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api",
+    "dev:mobile": "npm run start --workspace @food-tracker/mobile",
+    "dev:api": "npm run start:dev --workspace @food-tracker/api",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate --workspace @food-tracker/api",
+    "build": "npm run build --workspace @food-tracker/api && npm run typecheck --workspace @food-tracker/mobile",
+    "lint": "npm run lint --workspace @food-tracker/api && npm run lint --workspace @food-tracker/mobile",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}
