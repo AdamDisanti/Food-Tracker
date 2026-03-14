@@ -19,19 +19,3 @@
 ## Validate setup
 - `npm run lint`
 - `npm run build`
-
-## Milestone 0 status
-- Monorepo scaffolded
-- Expo and NestJS apps scaffolded
-- Prisma configured in API app
-- CI lint/build workflow configured
-- Postgres Docker compose configured
-
-## Milestone 2 API routes
-- `GET /foods/search?q=chicken&limit=20`
-- `GET /foods/:id` (supports cached id or USDA FDC id)
-- `POST /foods/import/usda/:fdcId` (optional cache import route)
-
-## Milestone 3 API routes
-- `POST /logs/items`
-- `GET /logs/day?date=YYYY-MM-DD`
