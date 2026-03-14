@@ -31,3 +31,7 @@
 - `GET /foods/search?q=chicken&limit=20`
 - `GET /foods/:id` (supports cached id or USDA FDC id)
 - `POST /foods/import/usda/:fdcId` (optional cache import route)
+
+## Milestone 3 API routes
+- `POST /logs/items`
+- `GET /logs/day?date=YYYY-MM-DD`
