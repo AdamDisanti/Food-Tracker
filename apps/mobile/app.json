@@ -12,6 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.adamdisanti.foodtracker",
       "supportsTablet": true
     },
     "android": {
