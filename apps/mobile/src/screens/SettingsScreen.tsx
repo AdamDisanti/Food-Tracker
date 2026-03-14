@@ -4,13 +4,21 @@ import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
+import { MacroGoals } from '../types/app';
 
 // Settings shell for manual macro goal entry in Milestone 1.
-export function SettingsScreen() {
-  const [calories, setCalories] = useState('2200');
-  const [protein, setProtein] = useState('170');
-  const [carbs, setCarbs] = useState('220');
-  const [fat, setFat] = useState('70');
+export function SettingsScreen({
+  initialGoals,
+  onSaveGoals,
+}: {
+  initialGoals: MacroGoals | null;
+  onSaveGoals: (goals: MacroGoals) => Promise<void>;
+}) {
+  const [calories, setCalories] = useState(String(initialGoals?.calories ?? 2200));
+  const [protein, setProtein] = useState(String(initialGoals?.protein ?? 170));
+  const [carbs, setCarbs] = useState(String(initialGoals?.carbs ?? 220));
+  const [fat, setFat] = useState(String(initialGoals?.fat ?? 70));
+  const [status, setStatus] = useState<string | null>(null);
 
   return (
     <ScreenContainer>
@@ -20,8 +28,23 @@ export function SettingsScreen() {
         <GoalInput label="Carbs (g)" value={carbs} onChangeText={setCarbs} />
         <GoalInput label="Fat (g)" value={fat} onChangeText={setFat} />
 
-        <PrimaryButton label="Save Goals" onPress={() => {}} />
-        <Text style={styles.helper}>Backend wiring for settings save will be added in Milestone 4.</Text>
+        <PrimaryButton
+          label="Save Goals"
+          onPress={() => {
+            const payload: MacroGoals = {
+              calories: Math.max(0, Number(calories) || 0),
+              protein: Math.max(0, Number(protein) || 0),
+              carbs: Math.max(0, Number(carbs) || 0),
+              fat: Math.max(0, Number(fat) || 0),
+            };
+
+            setStatus('Saving...');
+            void onSaveGoals(payload)
+              .then(() => setStatus('Saved.'))
+              .catch((err: Error) => setStatus(err.message || 'Save failed'));
+          }}
+        />
+        <Text style={styles.helper}>{status ?? 'Update daily nutrition goals used in diary progress bars.'}</Text>
       </SectionCard>
     </ScreenContainer>
   );

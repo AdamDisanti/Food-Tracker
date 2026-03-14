@@ -2,13 +2,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { BottomNav } from './src/components/BottomNav';
 import { colors } from './src/theme/colors';
-import { AddFoodSaveInput, FoodSearchItem, MealGroup, TopLevelScreen } from './src/types/app';
+import {
+  AddFoodSaveInput,
+  FoodSearchItem,
+  MacroGoals,
+  MealGroup,
+  TopLevelScreen,
+} from './src/types/app';
 import { AddFoodScreen } from './src/screens/AddFoodScreen';
 import { DiaryScreen, AddActionMenu } from './src/screens/DiaryScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { createLogItem, getDayLog } from './src/api/logs';
 import { getApiBaseUrl } from './src/api/client';
+import { getGoals, saveGoals } from './src/api/goals';
+import {
+  addFavorite,
+  getFavorites,
+  removeFavorite,
+} from './src/api/favorites';
+import { getRecentFoods } from './src/api/foods';
 
 const emptyMeals: Record<MealGroup, string[]> = {
   Breakfast: [],
@@ -32,6 +45,38 @@ export default function App() {
   const [dayMeals, setDayMeals] = useState<Record<MealGroup, string[]>>(emptyMeals);
   const [dayTotals, setDayTotals] = useState(emptyTotals);
   const [dayError, setDayError] = useState<string | null>(null);
+  const [goals, setGoals] = useState<MacroGoals | null>(null);
+  const [recentFoods, setRecentFoods] = useState<FoodSearchItem[]>([]);
+  const [favoriteFoods, setFavoriteFoods] = useState<FoodSearchItem[]>([]);
+
+  useEffect(() => {
+    async function loadSupportingData() {
+      try {
+        const [savedGoals, recents, favorites] = await Promise.all([
+          getGoals(),
+          getRecentFoods(),
+          getFavorites(),
+        ]);
+
+        setGoals(
+          savedGoals
+            ? {
+                calories: savedGoals.calorieGoal,
+                protein: savedGoals.proteinGoal,
+                carbs: savedGoals.carbGoal,
+                fat: savedGoals.fatGoal,
+              }
+            : null,
+        );
+        setRecentFoods(recents);
+        setFavoriteFoods(favorites);
+      } catch {
+        // Non-blocking for diary flow; API warnings are shown in existing footer status.
+      }
+    }
+
+    void loadSupportingData();
+  }, []);
 
   const dateLabel = useMemo(
     () => selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -100,10 +145,26 @@ export default function App() {
           onAddFromGroup={onMealAddPress}
           mealItems={dayMeals}
           totals={dayTotals}
+          goals={goals ?? undefined}
         />
       ) : null}
 
-      {activeScreen === 'Search' ? <SearchScreen onPickFood={goToAddFromSearch} /> : null}
+      {activeScreen === 'Search' ? (
+        <SearchScreen
+          onPickFood={goToAddFromSearch}
+          recentFoods={recentFoods}
+          favoriteFoods={favoriteFoods}
+          onToggleFavorite={async (food, shouldFavorite) => {
+            if (shouldFavorite) {
+              await addFavorite(food.id);
+            } else {
+              await removeFavorite(food.id);
+            }
+
+            setFavoriteFoods(await getFavorites());
+          }}
+        />
+      ) : null}
 
       {activeScreen === 'AddFood' ? (
         <AddFoodScreen
@@ -114,7 +175,10 @@ export default function App() {
             void saveFoodToDiary(input, selectedFood, selectedDate)
               .then(() => {
                 setActiveScreen('Diary');
-                return refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError);
+                return Promise.all([
+                  refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError),
+                  getRecentFoods().then(setRecentFoods),
+                ]).then(() => undefined);
               })
               .catch((error: Error) => {
                 Alert.alert('Save Failed', error.message);
@@ -123,7 +187,26 @@ export default function App() {
         />
       ) : null}
 
-      {activeScreen === 'Settings' ? <SettingsScreen /> : null}
+      {activeScreen === 'Settings' ? (
+        <SettingsScreen
+          initialGoals={goals}
+          onSaveGoals={async (nextGoals) => {
+            const saved = await saveGoals({
+              calorieGoal: nextGoals.calories,
+              proteinGoal: nextGoals.protein,
+              carbGoal: nextGoals.carbs,
+              fatGoal: nextGoals.fat,
+            });
+
+            setGoals({
+              calories: saved.calorieGoal,
+              protein: saved.proteinGoal,
+              carbs: saved.carbGoal,
+              fat: saved.fatGoal,
+            });
+          }}
+        />
+      ) : null}
 
       {/* Global quick-action menu invoked from meal section plus buttons. */}
       <AddActionMenu

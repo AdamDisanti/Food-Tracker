@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { favoriteFoods, recentFoods } from '../data/mockData';
 import { FoodSearchItem } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -12,8 +11,14 @@ type SearchTab = 'All' | 'Favorites';
 // Search shell screen with tabs and empty-query recents behavior.
 export function SearchScreen({
   onPickFood,
+  recentFoods,
+  favoriteFoods,
+  onToggleFavorite,
 }: {
   onPickFood: (item: FoodSearchItem) => void;
+  recentFoods: FoodSearchItem[];
+  favoriteFoods: FoodSearchItem[];
+  onToggleFavorite: (food: FoodSearchItem, shouldFavorite: boolean) => Promise<void>;
 }) {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<SearchTab>('All');
@@ -22,6 +27,7 @@ export function SearchScreen({
   const [error, setError] = useState<string | null>(null);
 
   const sourceList = tab === 'All' ? recentFoods : favoriteFoods;
+  const favoriteIds = useMemo(() => new Set(favoriteFoods.map((item) => item.id)), [favoriteFoods]);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,8 +66,8 @@ export function SearchScreen({
 
   const displayList = useMemo(() => {
     if (!query.trim()) {
-      // MVP behavior: show recents when query is empty.
-      return recentFoods;
+      // Empty query shows recents for All tab and favorites for Favorites tab.
+      return tab === 'All' ? recentFoods : favoriteFoods;
     }
 
     if (tab === 'All') {
@@ -70,7 +76,7 @@ export function SearchScreen({
 
     const q = query.toLowerCase();
     return sourceList.filter((item) => item.name.toLowerCase().includes(q));
-  }, [query, sourceList, apiResults, tab]);
+  }, [query, sourceList, apiResults, tab, recentFoods, favoriteFoods]);
 
   return (
     <ScreenContainer>
@@ -109,7 +115,18 @@ export function SearchScreen({
                 <Text style={styles.foodName}>{item.name}</Text>
                 {!!item.subtitle && <Text style={styles.subtitle}>{item.subtitle}</Text>}
               </View>
-              <Text style={styles.kcalLabel}>{item.caloriesPerServing} kcal</Text>
+              <View style={styles.rowRight}>
+                <Text style={styles.kcalLabel}>{item.caloriesPerServing} kcal</Text>
+                <Pressable
+                  onPress={() => {
+                    const currentlyFavorite = favoriteIds.has(item.id);
+                    void onToggleFavorite(item, !currentlyFavorite);
+                  }}
+                  style={styles.favoriteButton}
+                >
+                  <Text style={styles.favoriteText}>{favoriteIds.has(item.id) ? '★' : '☆'}</Text>
+                </Pressable>
+              </View>
             </Pressable>
           ))
         ) : (
@@ -163,6 +180,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   foodName: {
     color: colors.textPrimary,
     fontSize: 15,
@@ -177,6 +199,18 @@ const styles = StyleSheet.create({
     color: colors.warning,
     fontWeight: '700',
     fontSize: 12,
+  },
+  favoriteButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.panel,
+  },
+  favoriteText: {
+    color: colors.textPrimary,
+    fontSize: 14,
   },
   emptyText: {
     color: colors.textSecondary,

@@ -1,6 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { diaryGoals } from '../data/mockData';
-import { MealGroup } from '../types/app';
+import { MacroGoals, MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
@@ -25,6 +24,7 @@ export function DiaryScreen({
   onAddFromGroup,
   mealItems,
   totals,
+  goals,
 }: {
   dateLabel: string;
   onPrevDay: () => void;
@@ -41,6 +41,7 @@ export function DiaryScreen({
   onAddFromGroup: (group: MealGroup) => void;
   mealItems: Record<MealGroup, string[]>;
   totals: { calories: number; protein: number; carbs: number; fat: number };
+  goals?: MacroGoals;
 }) {
   return (
     <ScreenContainer>
@@ -63,7 +64,7 @@ export function DiaryScreen({
       </SectionCard>
 
       <SectionCard title="Nutrition Summary">
-        <NutritionSummary totals={totals} goals={diaryGoals} />
+        <NutritionSummary totals={totals} goals={goals} />
       </SectionCard>
 
       <SectionCard title="Meals">
