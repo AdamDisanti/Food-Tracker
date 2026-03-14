@@ -22,6 +22,46 @@ export class FoodsService {
     return (response.foods ?? []).map(mapUsdaSearchItemToSummary);
   }
 
+  // Returns recently logged foods in descending usage order for search empty-state recents.
+  async getRecentFoods(limit = 20): Promise<FoodSummaryDto[]> {
+    const grouped = await this.prisma.mealLogItem.groupBy({
+      by: ['foodId'],
+      _max: { loggedAt: true },
+      orderBy: {
+        _max: {
+          loggedAt: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    const foodIds = grouped.map((item) => item.foodId);
+    if (!foodIds.length) {
+      return [];
+    }
+
+    const foods = await this.prisma.food.findMany({
+      where: { id: { in: foodIds } },
+    });
+
+    const foodById = new Map(foods.map((food) => [food.id, food]));
+
+    return grouped
+      .map((group) => foodById.get(group.foodId))
+      .filter((food): food is (typeof foods)[number] => Boolean(food))
+      .map((food) => ({
+        id: food.id,
+        source: 'usda' as const,
+        sourceId: food.sourceId,
+        name: food.name,
+        brand: food.brand,
+        caloriesPer100g: food.caloriesPer100g,
+        proteinPer100g: food.proteinPer100g,
+        carbsPer100g: food.carbsPer100g,
+        fatPer100g: food.fatPer100g,
+      }));
+  }
+
   // Finds food detail from cache first; falls back to USDA by source id if needed.
   async getFoodById(id: string): Promise<FoodDetailDto> {
     const cachedByLocalId = await this.prisma.food.findUnique({

@@ -7,6 +7,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { FoodDetailDto } from './dto/food-detail.dto';
+import { RecentFoodsQueryDto } from './dto/recent-foods-query.dto';
 import { FoodSummaryDto } from './dto/food-summary.dto';
 import { SearchFoodsQueryDto } from './dto/search-foods-query.dto';
 import { FoodsService } from './foods.service';
@@ -19,6 +20,12 @@ export class FoodsController {
   search(@Query() query: SearchFoodsQueryDto): Promise<FoodSummaryDto[]> {
     const limit = query.limit ?? 20;
     return this.foodsService.searchFoods(query.q, limit);
+  }
+
+  @Get('recent')
+  getRecent(@Query() query: RecentFoodsQueryDto): Promise<FoodSummaryDto[]> {
+    const limit = query.limit ?? 20;
+    return this.foodsService.getRecentFoods(limit);
   }
 
   @Get(':id')
