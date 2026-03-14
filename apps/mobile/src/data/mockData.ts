@@ -15,14 +15,7 @@ export const diaryGoals: MacroGoals = {
   fat: 70,
 };
 
-export const recentFoods: FoodSearchItem[] = [
-  { id: '1', name: 'Greek Yogurt', subtitle: '170 g serving', caloriesPerServing: 100 },
-  { id: '2', name: 'Blueberries', subtitle: '80 g serving', caloriesPerServing: 45 },
-  { id: '3', name: 'Chicken Breast', subtitle: '120 g serving', caloriesPerServing: 198 },
-  { id: '4', name: 'White Rice', subtitle: '1 cup cooked', caloriesPerServing: 205 },
-];
+// Fallback lists used by search/favorites UI when query is empty or for local testing.
+export const recentFoods: FoodSearchItem[] = [];
 
-export const favoriteFoods: FoodSearchItem[] = [
-  { id: '10', name: 'Egg Whites', subtitle: '3/4 cup', caloriesPerServing: 95 },
-  { id: '11', name: 'Banana', subtitle: '1 medium', caloriesPerServing: 105 },
-];
+export const favoriteFoods: FoodSearchItem[] = [];

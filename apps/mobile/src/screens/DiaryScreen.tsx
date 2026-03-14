@@ -1,5 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { diaryGoals, diaryTotals } from '../data/mockData';
+import { diaryGoals } from '../data/mockData';
 import { MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -7,13 +7,6 @@ import { SectionCard } from '../components/SectionCard';
 import { NutritionSummary } from '../components/NutritionSummary';
 import { MealSection } from '../components/MealSection';
 import { CalendarModal } from '../components/CalendarModal';
-
-const mealItems: Record<MealGroup, string[]> = {
-  Breakfast: ['Greek Yogurt (170g)'],
-  Lunch: ['Chicken Breast (120g)', 'White Rice (1 cup)'],
-  Dinner: [],
-  Snacks: ['Blueberries (80g)'],
-};
 
 // Diary shell screen: date header, macro summary, meal sections, and add entry point.
 export function DiaryScreen({
@@ -30,6 +23,8 @@ export function DiaryScreen({
   onPrevMonth,
   onNextMonth,
   onAddFromGroup,
+  mealItems,
+  totals,
 }: {
   dateLabel: string;
   onPrevDay: () => void;
@@ -44,6 +39,8 @@ export function DiaryScreen({
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onAddFromGroup: (group: MealGroup) => void;
+  mealItems: Record<MealGroup, string[]>;
+  totals: { calories: number; protein: number; carbs: number; fat: number };
 }) {
   return (
     <ScreenContainer>
@@ -66,7 +63,7 @@ export function DiaryScreen({
       </SectionCard>
 
       <SectionCard title="Nutrition Summary">
-        <NutritionSummary totals={diaryTotals} goals={diaryGoals} />
+        <NutritionSummary totals={totals} goals={diaryGoals} />
       </SectionCard>
 
       <SectionCard title="Meals">

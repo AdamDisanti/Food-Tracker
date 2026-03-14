@@ -12,6 +12,14 @@ export interface FoodSearchItem {
   caloriesPerServing: number;
 }
 
+export interface AddFoodSaveInput {
+  amount: number;
+  servingUnit: string;
+  mealGroup: MealGroup;
+  grams: number;
+  loggedAt: string;
+}
+
 export interface MacroTotals {
   calories: number;
   protein: number;

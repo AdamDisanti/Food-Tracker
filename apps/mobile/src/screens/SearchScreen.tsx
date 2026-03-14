@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { favoriteFoods, recentFoods } from '../data/mockData';
 import { FoodSearchItem } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
+import { searchFoods } from '../api/foods';
 
 type SearchTab = 'All' | 'Favorites';
 
@@ -16,8 +17,46 @@ export function SearchScreen({
 }) {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<SearchTab>('All');
+  const [apiResults, setApiResults] = useState<FoodSearchItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const sourceList = tab === 'All' ? recentFoods : favoriteFoods;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      if (tab !== 'All' || !query.trim()) {
+        setApiResults([]);
+        setError(null);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const foods = await searchFoods(query.trim());
+        if (!cancelled) {
+          setApiResults(foods);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setApiResults([]);
+          setError(err instanceof Error ? err.message : 'Search failed');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [query, tab]);
 
   const displayList = useMemo(() => {
     if (!query.trim()) {
@@ -25,9 +64,13 @@ export function SearchScreen({
       return recentFoods;
     }
 
+    if (tab === 'All') {
+      return apiResults;
+    }
+
     const q = query.toLowerCase();
     return sourceList.filter((item) => item.name.toLowerCase().includes(q));
-  }, [query, sourceList]);
+  }, [query, sourceList, apiResults, tab]);
 
   return (
     <ScreenContainer>
@@ -57,6 +100,8 @@ export function SearchScreen({
       </SectionCard>
 
       <SectionCard title={query.trim() ? 'Results' : 'Recent Foods'}>
+        {isLoading ? <Text style={styles.emptyText}>Searching...</Text> : null}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         {displayList.length > 0 ? (
           displayList.map((item) => (
             <Pressable key={item.id} style={styles.row} onPress={() => onPickFood(item)}>
@@ -135,6 +180,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.textSecondary,
+    fontSize: 13,
+  },
+  errorText: {
+    color: colors.danger,
     fontSize: 13,
   },
 });

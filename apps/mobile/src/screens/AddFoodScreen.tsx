@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { FoodSearchItem, MealGroup } from '../types/app';
+import { AddFoodSaveInput, FoodSearchItem, MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
 
 const servingOptions = ['serving', 'grams', 'oz'];
@@ -17,7 +17,7 @@ export function AddFoodScreen({
 }: {
   food: FoodSearchItem | null;
   defaultGroup: MealGroup;
-  onSave: () => void;
+  onSave: (input: AddFoodSaveInput) => void;
   onBack: () => void;
 }) {
   const [amount, setAmount] = useState('1');
@@ -27,6 +27,16 @@ export function AddFoodScreen({
 
   const numericAmount = Number(amount) || 0;
   const calories = useMemo(() => (food?.caloriesPerServing ?? 0) * numericAmount, [food, numericAmount]);
+  const estimatedGrams = useMemo(() => {
+    // Until serving conversion tables are wired, use a simple grams estimate for snapshot persistence.
+    if (serving === 'grams') {
+      return numericAmount;
+    }
+    if (serving === 'oz') {
+      return numericAmount * 28.35;
+    }
+    return numericAmount * 100;
+  }, [numericAmount, serving]);
 
   return (
     <ScreenContainer>
@@ -93,7 +103,19 @@ export function AddFoodScreen({
         <Pressable style={styles.backButton} onPress={onBack}>
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
-        <PrimaryButton label="Save to Diary" onPress={onSave} disabled={!food} />
+        <PrimaryButton
+          label="Save to Diary"
+          onPress={() =>
+            onSave({
+              amount: numericAmount,
+              servingUnit: serving,
+              mealGroup: group,
+              grams: estimatedGrams,
+              loggedAt: new Date().toISOString(),
+            })
+          }
+          disabled={!food || numericAmount <= 0}
+        />
       </View>
     </ScreenContainer>
   );
