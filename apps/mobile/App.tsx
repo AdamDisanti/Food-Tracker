@@ -49,6 +49,7 @@ export default function App() {
   const [selectedMealGroup, setSelectedMealGroup] = useState<MealGroup>('Lunch');
   const [selectedFood, setSelectedFood] = useState<FoodSearchItem | null>(null);
   const [editingLogItem, setEditingLogItem] = useState<LoggedMealItem | null>(null);
+  const [draggingItem, setDraggingItem] = useState<LoggedMealItem | null>(null);
   const [dayMeals, setDayMeals] = useState<Record<MealGroup, LoggedMealItem[]>>(emptyMeals);
   const [dayTotals, setDayTotals] = useState(emptyTotals);
   const [dayError, setDayError] = useState<string | null>(null);
@@ -191,6 +192,27 @@ export default function App() {
           onNextMonth={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
           onAddFromGroup={onMealAddPress}
           onEditLoggedItem={onEditLoggedItem}
+          onStartDragItem={setDraggingItem}
+          onCancelDrag={() => setDraggingItem(null)}
+          draggingItem={draggingItem}
+          onDropToGroup={(targetGroup) => {
+            if (!draggingItem) {
+              return;
+            }
+
+            const sourceGroup = toUiMealGroup(draggingItem.mealGroup);
+            if (sourceGroup === targetGroup) {
+              setDraggingItem(null);
+              return;
+            }
+
+            void updateLogItem(draggingItem.id, { mealGroup: targetGroup })
+              .then(() => refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError))
+              .then(() => setDraggingItem(null))
+              .catch((error: Error) => {
+                Alert.alert('Move Failed', error.message);
+              });
+          }}
           mealItems={dayMeals}
           totals={dayTotals}
           goals={goals ?? undefined}
@@ -199,6 +221,7 @@ export default function App() {
 
       {activeScreen === 'Search' ? (
         <SearchScreen
+          onBack={() => setActiveScreen('Diary')}
           onPickFood={goToAddFromSearch}
           recentFoods={recentFoods}
           favoriteFoods={favoriteFoods}
@@ -310,7 +333,6 @@ export default function App() {
 
       {/* Bottom nav is fixed so screen switching stays consistent and predictable. */}
       <View style={styles.bottomNavShell}>
-        <Text style={styles.milestoneLabel}>Milestone 1 Shell Navigation</Text>
         {dayError ? <Text style={styles.errorText}>API: {dayError}</Text> : null}
         <Text style={styles.apiLabel}>API base: {getApiBaseUrl()}</Text>
         <BottomNav active={activeScreen} onSelect={setActiveScreen} />
@@ -380,12 +402,6 @@ const styles = StyleSheet.create({
   appRoot: {
     flex: 1,
     backgroundColor: colors.bg,
-  },
-  milestoneLabel: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 4,
   },
   apiLabel: {
     color: colors.textSecondary,

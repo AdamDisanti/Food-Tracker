@@ -2,10 +2,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { TopLevelScreen } from '../types/app';
 import { colors } from '../theme/colors';
 
-const tabs: Array<{ key: TopLevelScreen; label: string }> = [
-  { key: 'Diary', label: 'Diary' },
-  { key: 'Search', label: 'Search' },
-  { key: 'Settings', label: 'Settings' },
+const tabs: Array<{ key: TopLevelScreen; icon: string; accessibilityLabel: string }> = [
+  { key: 'Diary', icon: '📖', accessibilityLabel: 'Diary' },
+  { key: 'Search', icon: '⊕', accessibilityLabel: 'Search and add food' },
+  { key: 'Settings', icon: '⚙︎', accessibilityLabel: 'Settings' },
 ];
 
 // Lightweight tab row for Milestone 1 before full navigation package wiring.
@@ -25,8 +25,10 @@ export function BottomNav({
             key={tab.key}
             style={[styles.tab, isActive && styles.tabActive]}
             onPress={() => onSelect(tab.key)}
+            accessibilityRole="button"
+            accessibilityLabel={tab.accessibilityLabel}
           >
-            <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
+            <Text style={[styles.icon, isActive && styles.iconActive]}>{tab.icon}</Text>
           </Pressable>
         );
       })}
@@ -53,11 +55,12 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.panelMuted,
   },
-  label: {
+  icon: {
     color: colors.textSecondary,
-    fontWeight: '600',
+    fontSize: 20,
+    lineHeight: 22,
   },
-  labelActive: {
+  iconActive: {
     color: colors.textPrimary,
   },
 });

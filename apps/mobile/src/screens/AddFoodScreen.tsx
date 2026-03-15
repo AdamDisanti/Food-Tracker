@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -111,67 +111,74 @@ export function AddFoodScreen({
   );
 
   return (
-    <ScreenContainer>
-      <SectionCard title="Add Food">
-        <Text style={styles.foodName}>{food?.name ?? 'Select food from search'}</Text>
-        <Text style={styles.subtitle}>
-          {mode === 'edit'
-            ? 'Edit an existing diary entry.'
-            : 'Fast entry flow optimized for meal logging.'}
-        </Text>
-      </SectionCard>
-
-      <SectionCard title="Entry Details">
-        <FoodEntryDetailsForm
-          amount={amount}
-          onChangeAmount={setAmount}
-          servingChoices={servingChoices}
-          selectedServingChoiceId={servingChoiceId}
-          onSelectServingChoice={setServingChoiceId}
-          timestamp={time}
-          onChangeTimestamp={setTime}
-          group={group}
-          onChangeGroup={setGroup}
-        />
-      </SectionCard>
-
-      <SectionCard title="Nutrition Preview">
-        <NutritionPreviewPanel
-          previewTotals={{
-            calories: preview.calories,
-            protein: preview.protein,
-            carbs: preview.carbs,
-            fat: preview.fat,
-          }}
-          goals={goals}
-          estimatedGrams={estimatedGrams}
-          ouncesEquivalent={round2(estimatedGrams / GRAMS_PER_OUNCE)}
-          selectedServingChoice={selectedServingChoice}
-        />
-      </SectionCard>
-
-      <View style={styles.actionRow}>
-        {mode === 'edit' && onDelete ? (
-          <Pressable style={styles.deleteButton} onPress={onDelete}>
-            <Text style={styles.deleteLabel}>Remove from Diary</Text>
+    <ScreenContainer scroll={false}>
+      <View style={styles.layout}>
+        <View style={styles.headerRow}>
+          <Pressable style={styles.backIconButton} onPress={onBack}>
+            <Text style={styles.backIcon}>←</Text>
           </Pressable>
-        ) : null}
-        <Pressable style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backLabel}>Back</Text>
-        </Pressable>
-        <PrimaryButton
-          label={mode === 'edit' ? 'Save Changes' : 'Save to Diary'}
-          onPress={() =>
-            onSave({
-              amount: numericAmount,
-              servingUnit: selectedServingChoice?.unitName ?? 'serving',
-              mealGroup: group,
-              grams: estimatedGrams,
-              loggedAt: new Date().toISOString(),
-            })
-          }
-          disabled={!food || numericAmount <= 0}
-        />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <SectionCard title="Add Food">
+            <Text style={styles.foodName}>{food?.name ?? 'Select food from search'}</Text>
+            <Text style={styles.subtitle}>
+              {mode === 'edit'
+                ? 'Edit an existing diary entry.'
+                : 'Fast entry flow optimized for meal logging.'}
+            </Text>
+          </SectionCard>
+
+          <SectionCard title="Entry Details">
+            <FoodEntryDetailsForm
+              amount={amount}
+              onChangeAmount={setAmount}
+              servingChoices={servingChoices}
+              selectedServingChoiceId={servingChoiceId}
+              onSelectServingChoice={setServingChoiceId}
+              timestamp={time}
+              onChangeTimestamp={setTime}
+              group={group}
+              onChangeGroup={setGroup}
+            />
+          </SectionCard>
+
+          <SectionCard title="Nutrition Preview">
+            <NutritionPreviewPanel
+              previewTotals={{
+                calories: preview.calories,
+                protein: preview.protein,
+                carbs: preview.carbs,
+                fat: preview.fat,
+              }}
+              goals={goals}
+              estimatedGrams={estimatedGrams}
+              ouncesEquivalent={round2(estimatedGrams / GRAMS_PER_OUNCE)}
+              selectedServingChoice={selectedServingChoice}
+            />
+          </SectionCard>
+        </ScrollView>
+
+        <View style={styles.actionRow}>
+          {mode === 'edit' && onDelete ? (
+            <Pressable style={styles.deleteButton} onPress={onDelete}>
+              <Text style={styles.deleteLabel}>Remove from Diary</Text>
+            </Pressable>
+          ) : null}
+          <PrimaryButton
+            label="Save"
+            onPress={() =>
+              onSave({
+                amount: numericAmount,
+                servingUnit: selectedServingChoice?.unitName ?? 'serving',
+                mealGroup: group,
+                grams: estimatedGrams,
+                loggedAt: new Date().toISOString(),
+              })
+            }
+            disabled={!food || numericAmount <= 0}
+          />
+        </View>
       </View>
     </ScreenContainer>
   );
@@ -187,8 +194,43 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
   },
+  layout: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  headerRow: {
+    paddingTop: 4,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '700',
+  },
+  scrollContent: {
+    gap: 14,
+    paddingBottom: 120,
+  },
   actionRow: {
     gap: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.bg,
   },
   deleteButton: {
     borderWidth: 1,
@@ -200,18 +242,6 @@ const styles = StyleSheet.create({
   },
   deleteLabel: {
     color: colors.danger,
-    fontWeight: '700',
-  },
-  backButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    alignItems: 'center',
-    paddingVertical: 12,
-    backgroundColor: colors.panel,
-  },
-  backLabel: {
-    color: colors.textSecondary,
     fontWeight: '700',
   },
 });

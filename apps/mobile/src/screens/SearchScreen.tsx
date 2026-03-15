@@ -11,11 +11,13 @@ type SearchTab = 'All' | 'Favorites';
 
 // Search shell screen with tabs and empty-query recents behavior.
 export function SearchScreen({
+  onBack,
   onPickFood,
   recentFoods,
   favoriteFoods,
   onToggleFavorite,
 }: {
+  onBack: () => void;
   onPickFood: (item: FoodSearchItem) => void;
   recentFoods: FoodSearchItem[];
   favoriteFoods: FoodSearchItem[];
@@ -81,6 +83,12 @@ export function SearchScreen({
 
   return (
     <ScreenContainer>
+      <View style={styles.headerRow}>
+        <Pressable style={styles.backIconButton} onPress={onBack}>
+          <Text style={styles.backIcon}>←</Text>
+        </Pressable>
+      </View>
+
       <SectionCard title="Search Food">
         <TextInput
           placeholder="Search by food or brand"
@@ -130,6 +138,26 @@ export function SearchScreen({
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '700',
+  },
   searchInput: {
     borderWidth: 1,
     borderColor: colors.border,

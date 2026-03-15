@@ -24,6 +24,10 @@ export function DiaryScreen({
   onNextMonth,
   onAddFromGroup,
   onEditLoggedItem,
+  onStartDragItem,
+  onDropToGroup,
+  onCancelDrag,
+  draggingItem,
   mealItems,
   totals,
   goals,
@@ -42,6 +46,10 @@ export function DiaryScreen({
   onNextMonth: () => void;
   onAddFromGroup: (group: MealGroup) => void;
   onEditLoggedItem: (item: LoggedMealItem) => void;
+  onStartDragItem: (item: LoggedMealItem) => void;
+  onDropToGroup: (group: MealGroup) => void;
+  onCancelDrag: () => void;
+  draggingItem: LoggedMealItem | null;
   mealItems: Record<MealGroup, LoggedMealItem[]>;
   totals: { calories: number; protein: number; carbs: number; fat: number };
   goals?: MacroGoals;
@@ -70,6 +78,17 @@ export function DiaryScreen({
       </SectionCard>
 
       <SectionCard title="Meals">
+        {draggingItem ? (
+          <View style={styles.dragBanner}>
+            <Text style={styles.dragBannerText}>
+              Dragging: {draggingItem.foodName}. Drop into another meal section.
+            </Text>
+            <Pressable onPress={onCancelDrag} style={styles.dragCancelButton}>
+              <Text style={styles.dragCancelLabel}>Cancel</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {(['Breakfast', 'Lunch', 'Dinner', 'Snacks'] as MealGroup[]).map((group) => (
           <MealSection
             key={group}
@@ -77,6 +96,10 @@ export function DiaryScreen({
             items={mealItems[group]}
             onAddPress={onAddFromGroup}
             onItemPress={onEditLoggedItem}
+            onStartDrag={onStartDragItem}
+            onDropToGroup={onDropToGroup}
+            draggingItemId={draggingItem?.id}
+            draggingFromGroup={draggingItem ? toUiMealGroup(draggingItem.mealGroup) : null}
           />
         ))}
       </SectionCard>
@@ -165,6 +188,33 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '700',
   },
+  dragBanner: {
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 10,
+    backgroundColor: colors.panelMuted,
+    padding: 10,
+    gap: 8,
+  },
+  dragBannerText: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dragCancelButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+  },
+  dragCancelLabel: {
+    color: colors.textSecondary,
+    fontWeight: '700',
+    fontSize: 12,
+  },
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -214,3 +264,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 });
+
+function toUiMealGroup(group: 'breakfast' | 'lunch' | 'dinner' | 'snacks'): MealGroup {
+  return `${group[0].toUpperCase()}${group.slice(1)}` as MealGroup;
+}

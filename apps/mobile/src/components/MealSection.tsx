@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
@@ -9,37 +10,63 @@ export function MealSection({
   items,
   onAddPress,
   onItemPress,
+  onStartDrag,
+  onDropToGroup,
+  draggingItemId,
+  draggingFromGroup,
 }: {
   group: MealGroup;
   items: LoggedMealItem[];
   onAddPress: (group: MealGroup) => void;
   onItemPress: (item: LoggedMealItem) => void;
+  onStartDrag: (item: LoggedMealItem) => void;
+  onDropToGroup: (group: MealGroup) => void;
+  draggingItemId?: string | null;
+  draggingFromGroup?: MealGroup | null;
 }) {
+  const [expanded, setExpanded] = useState(true);
+  const canDropHere = Boolean(draggingItemId) && draggingFromGroup !== group;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, canDropHere && styles.dropTargetContainer]}>
       <View style={styles.header}>
-        <Text style={styles.title}>{group}</Text>
-        <Pressable onPress={() => onAddPress(group)} style={styles.addButton}>
-          <Text style={styles.addButtonLabel}>＋ Add</Text>
+        <Pressable style={styles.groupToggle} onPress={() => setExpanded((prev) => !prev)}>
+          <Text style={styles.title}>{expanded ? '▾' : '▸'} {group}</Text>
         </Pressable>
+        <View style={styles.headerActions}>
+          {canDropHere ? (
+            <Pressable onPress={() => onDropToGroup(group)} style={styles.dropButton}>
+              <Text style={styles.dropButtonLabel}>Drop Here</Text>
+            </Pressable>
+          ) : null}
+          <Pressable onPress={() => onAddPress(group)} style={styles.addButton}>
+            <Text style={styles.addButtonLabel}>＋</Text>
+          </Pressable>
+        </View>
       </View>
 
-      {items.length > 0 ? (
+      {expanded ? (
+        items.length > 0 ? (
         items.map((item) => (
           <Pressable
             key={item.id}
-            style={styles.itemRow}
+            style={[styles.itemRow, draggingItemId === item.id && styles.draggingRow]}
             onPress={() => onItemPress(item)}
+            onLongPress={() => onStartDrag(item)}
+            delayLongPress={180}
           >
             <Text style={styles.itemLabel}>
               • {item.foodName} ({item.amount} {item.servingUnit})
             </Text>
-            <Text style={styles.itemHint}>Tap to edit</Text>
+            <Text style={styles.itemHint}>
+              {draggingItemId === item.id ? 'Dragging… choose Drop Here in another meal' : 'Tap to edit • Long press to drag'}
+            </Text>
           </Pressable>
         ))
       ) : (
         <Text style={styles.emptyState}>No foods logged yet.</Text>
-      )}
+      )
+      ) : null}
     </View>
   );
 }
@@ -58,6 +85,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  groupToggle: {
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     color: colors.textPrimary,
     fontSize: 16,
@@ -71,6 +106,20 @@ const styles = StyleSheet.create({
   },
   addButtonLabel: {
     color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 16,
+    lineHeight: 16,
+  },
+  dropButton: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.panelMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  dropButtonLabel: {
+    color: colors.textPrimary,
     fontWeight: '700',
     fontSize: 12,
   },
@@ -90,6 +139,12 @@ const styles = StyleSheet.create({
   itemHint: {
     color: colors.textSecondary,
     fontSize: 11,
+  },
+  draggingRow: {
+    borderColor: colors.accent,
+  },
+  dropTargetContainer: {
+    borderColor: colors.accent,
   },
   emptyState: {
     color: colors.textSecondary,
