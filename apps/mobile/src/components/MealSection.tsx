@@ -53,41 +53,39 @@ export function MealSection({
 
       {expanded ? (
         items.length > 0 ? (
-        items.map((item) => (
-          <Pressable
-            key={item.id}
-            style={[styles.itemRow, draggingItemId === item.id && styles.draggingRowHidden]}
-            onPress={() => {
-              if (draggingItemId === item.id) {
-                return;
-              }
+        items
+          .filter((item) => item.id !== draggingItemId)
+          .map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.itemRow}
+              onPress={() => {
+                onItemPress(item);
+              }}
+              onLongPress={(event) => {
+                onDragStart(item, event.nativeEvent.pageX, event.nativeEvent.pageY);
+              }}
+              onTouchMove={(event) => {
+                if (draggingItemId !== item.id) {
+                  return;
+                }
 
-              onItemPress(item);
-            }}
-            onLongPress={(event) => {
-              onDragStart(item, event.nativeEvent.pageX, event.nativeEvent.pageY);
-            }}
-            onTouchMove={(event) => {
-              if (draggingItemId !== item.id) {
-                return;
-              }
+                onDragMove(event.nativeEvent.pageX, event.nativeEvent.pageY);
+              }}
+              onTouchEnd={() => {
+                if (draggingItemId !== item.id) {
+                  return;
+                }
 
-              onDragMove(event.nativeEvent.pageX, event.nativeEvent.pageY);
-            }}
-            onTouchEnd={() => {
-              if (draggingItemId !== item.id) {
-                return;
-              }
-
-              onDragEnd();
-            }}
-            delayLongPress={180}
-          >
-            <Text style={styles.itemLabel}>
-              • {item.foodName} ({item.amount} {item.servingUnit})
-            </Text>
-          </Pressable>
-        ))
+                onDragEnd();
+              }}
+              delayLongPress={180}
+            >
+              <Text style={styles.itemLabel}>
+                • {item.foodName} ({item.amount} {item.servingUnit})
+              </Text>
+            </Pressable>
+          ))
       ) : (
         <Text style={styles.emptyState}>No foods logged yet.</Text>
       )
@@ -147,9 +145,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     gap: 4,
-  },
-  draggingRowHidden: {
-    opacity: 0,
   },
   dropTargetContainer: {
     borderColor: colors.accent,
