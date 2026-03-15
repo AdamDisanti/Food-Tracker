@@ -54,6 +54,9 @@ export default function App() {
   const [goals, setGoals] = useState<MacroGoals | null>(null);
   const [recentFoods, setRecentFoods] = useState<FoodSearchItem[]>([]);
   const [favoriteFoods, setFavoriteFoods] = useState<FoodSearchItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTab, setSearchTab] = useState<'All' | 'Favorites'>('All');
+  const [searchApiResults, setSearchApiResults] = useState<FoodSearchItem[]>([]);
 
   useEffect(() => {
     async function loadSupportingData() {
@@ -212,6 +215,12 @@ export default function App() {
         <SearchScreen
           onBack={() => setActiveScreen('Diary')}
           onPickFood={goToAddFromSearch}
+          query={searchQuery}
+          onChangeQuery={setSearchQuery}
+          tab={searchTab}
+          onChangeTab={setSearchTab}
+          apiResults={searchApiResults}
+          onChangeApiResults={setSearchApiResults}
           recentFoods={recentFoods}
           favoriteFoods={favoriteFoods}
           onToggleFavorite={async (food, shouldFavorite) => {

@@ -13,19 +13,28 @@ type SearchTab = 'All' | 'Favorites';
 export function SearchScreen({
   onBack,
   onPickFood,
+  query,
+  onChangeQuery,
+  tab,
+  onChangeTab,
+  apiResults,
+  onChangeApiResults,
   recentFoods,
   favoriteFoods,
   onToggleFavorite,
 }: {
   onBack: () => void;
   onPickFood: (item: FoodSearchItem) => void;
+  query: string;
+  onChangeQuery: (value: string) => void;
+  tab: SearchTab;
+  onChangeTab: (tab: SearchTab) => void;
+  apiResults: FoodSearchItem[];
+  onChangeApiResults: (items: FoodSearchItem[]) => void;
   recentFoods: FoodSearchItem[];
   favoriteFoods: FoodSearchItem[];
   onToggleFavorite: (food: FoodSearchItem, shouldFavorite: boolean) => Promise<void>;
 }) {
-  const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<SearchTab>('All');
-  const [apiResults, setApiResults] = useState<FoodSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +46,7 @@ export function SearchScreen({
 
     async function run() {
       if (tab !== 'All' || !query.trim()) {
-        setApiResults([]);
+        onChangeApiResults([]);
         setError(null);
         return;
       }
@@ -47,11 +56,11 @@ export function SearchScreen({
       try {
         const foods = await searchFoods(query.trim());
         if (!cancelled) {
-          setApiResults(foods);
+          onChangeApiResults(foods);
         }
       } catch (err) {
         if (!cancelled) {
-          setApiResults([]);
+          onChangeApiResults([]);
           setError(err instanceof Error ? err.message : 'Search failed');
         }
       } finally {
@@ -65,7 +74,7 @@ export function SearchScreen({
     return () => {
       cancelled = true;
     };
-  }, [query, tab]);
+  }, [query, tab, onChangeApiResults]);
 
   const displayList = useMemo(() => {
     if (!query.trim()) {
@@ -103,7 +112,7 @@ export function SearchScreen({
           placeholder="Search by food or brand"
           placeholderTextColor={colors.textSecondary}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={onChangeQuery}
           style={styles.searchInput}
         />
 
@@ -113,7 +122,7 @@ export function SearchScreen({
             return (
               <Pressable
                 key={item}
-                onPress={() => setTab(item)}
+                onPress={() => onChangeTab(item)}
                 style={[styles.tab, active && styles.tabActive]}
               >
                 <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{item}</Text>
