@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View, Vibration } from 'react-native';
 import { MacroGoals, MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -49,6 +49,7 @@ export function DiaryScreen({
   totals: { calories: number; protein: number; carbs: number; fat: number };
   goals?: MacroGoals;
 }) {
+  const [liftAnim] = useState(() => new Animated.Value(0));
   const [drag, setDrag] = useState<{
     item: LoggedMealItem;
     sourceGroup: MealGroup;
@@ -89,6 +90,14 @@ export function DiaryScreen({
 
   const startDrag = (item: LoggedMealItem, pageX: number, pageY: number) => {
     const sourceGroup = toUiMealGroup(item.mealGroup);
+    Vibration.vibrate(8);
+    Animated.spring(liftAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 120,
+    }).start();
+
     setDrag({
       item,
       sourceGroup,
@@ -121,15 +130,23 @@ export function DiaryScreen({
 
       const target = prev.targetGroup;
       if (target && target !== prev.sourceGroup) {
+        Vibration.vibrate(12);
         onMoveLoggedItem(prev.item, target);
       }
 
       return null;
     });
+
+    Animated.spring(liftAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 110,
+    }).start();
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer scrollEnabled={!drag}>
       {/* Milestone 5: compact date header card by removing redundant title/helper copy. */}
       <SectionCard>
         <View style={styles.headerRow}>
@@ -176,12 +193,33 @@ export function DiaryScreen({
 
       {drag ? (
         <View pointerEvents="none" style={styles.dragGhostWrap}>
-          <View style={[styles.dragGhost, { left: 10, right: 10, top: Math.max(6, drag.y - 24) }]}>
+          <Animated.View
+            style={[
+              styles.dragGhost,
+              {
+                left: 10,
+                right: 10,
+                top: Math.max(6, drag.y - 24),
+                transform: [
+                  {
+                    scale: liftAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.98, 1.03],
+                    }),
+                  },
+                ],
+                opacity: liftAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.92, 1],
+                }),
+              },
+            ]}
+          >
             <Text style={styles.dragGhostText} numberOfLines={1}>{dragHint}</Text>
             <Text style={styles.dragGhostTarget}>
               {activeDropTarget ? `Drop into ${activeDropTarget}` : 'Drag over a meal section and release'}
             </Text>
-          </View>
+          </Animated.View>
         </View>
       ) : null}
 
@@ -281,6 +319,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 4,
+    shadowColor: '#000000',
+    shadowOpacity: 0.34,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 12,
   },
   dragGhostText: {
     color: colors.textPrimary,

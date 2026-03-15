@@ -8,8 +8,9 @@ const DEFAULT_HORIZONTAL_PADDING = 8;
 export function ScreenContainer({
   children,
   scroll = true,
+  scrollEnabled = true,
   horizontalPadding = DEFAULT_HORIZONTAL_PADDING,
-}: PropsWithChildren<{ scroll?: boolean; horizontalPadding?: number }>) {
+}: PropsWithChildren<{ scroll?: boolean; scrollEnabled?: boolean; horizontalPadding?: number }>) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -19,6 +20,7 @@ export function ScreenContainer({
             styles.scrollContent,
             { paddingHorizontal: horizontalPadding },
           ]}
+          scrollEnabled={scrollEnabled}
           showsVerticalScrollIndicator={false}
         >
           {children}
