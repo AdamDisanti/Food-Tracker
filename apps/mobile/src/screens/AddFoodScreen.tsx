@@ -111,9 +111,9 @@ export function AddFoodScreen({
   );
 
   return (
-    <ScreenContainer scroll={false}>
+    <ScreenContainer scroll={false} horizontalPadding={8}>
       <View style={styles.layout}>
-        <View style={styles.headerRow}>
+        <View style={styles.headerBar}>
           <Pressable style={styles.backIconButton} onPress={onBack}>
             <Text style={styles.backIcon}>←</Text>
           </Pressable>
@@ -188,24 +188,26 @@ export function AddFoodScreen({
 const styles = StyleSheet.create({
   layout: {
     flex: 1,
-    paddingHorizontal: 12,
     paddingBottom: 16,
   },
-  headerRow: {
-    paddingTop: 6,
-    paddingBottom: 12,
-    paddingHorizontal: 4,
+  headerBar: {
+    marginTop: 2,
+    marginBottom: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   backIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -217,28 +219,22 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
-    minHeight: 56,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: 44,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
     justifyContent: 'center',
   },
   headerTitle: {
     color: colors.textPrimary,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 19,
     fontWeight: '700',
   },
   menuDotsButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -249,12 +245,12 @@ const styles = StyleSheet.create({
     marginTop: -6,
   },
   scrollContent: {
-    gap: 12,
-    paddingBottom: 120,
+    gap: 10,
+    paddingBottom: 96,
   },
   actionRow: {
     gap: 10,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.bg,

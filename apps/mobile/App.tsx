@@ -404,8 +404,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panel,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    paddingBottom: 8,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingBottom: 4,
   },
 });

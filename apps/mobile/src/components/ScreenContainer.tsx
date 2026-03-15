@@ -3,16 +3,26 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-nat
 import { colors } from '../theme/colors';
 
 // Reusable page wrapper to enforce consistent safe-area and background handling.
-export function ScreenContainer({ children, scroll = true }: PropsWithChildren<{ scroll?: boolean }>) {
+export function ScreenContainer({
+  children,
+  scroll = true,
+  horizontalPadding = 16,
+}: PropsWithChildren<{ scroll?: boolean; horizontalPadding?: number }>) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: horizontalPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           {children}
         </ScrollView>
       ) : (
-        <View style={styles.fill}>{children}</View>
+        <View style={[styles.fill, { paddingHorizontal: horizontalPadding }]}>{children}</View>
       )}
     </SafeAreaView>
   );
@@ -25,11 +35,9 @@ const styles = StyleSheet.create({
   },
   fill: {
     flex: 1,
-    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   scrollContent: {
-    paddingHorizontal: 16,
     paddingBottom: 24,
     gap: 14,
   },

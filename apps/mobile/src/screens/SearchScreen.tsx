@@ -82,8 +82,8 @@ export function SearchScreen({
   }, [query, sourceList, apiResults, tab, recentFoods, favoriteFoods]);
 
   return (
-    <ScreenContainer>
-      <View style={styles.headerRow}>
+    <ScreenContainer horizontalPadding={8}>
+      <View style={styles.headerBar}>
         <Pressable style={styles.backIconButton} onPress={onBack}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
@@ -147,18 +147,24 @@ export function SearchScreen({
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
+  headerBar: {
+    marginTop: 2,
+    marginBottom: 2,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   backIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -170,18 +176,14 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
-    minHeight: 56,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: 44,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
     justifyContent: 'center',
   },
   headerTitle: {
     color: colors.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 19,
     fontWeight: '700',
   },
@@ -190,12 +192,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   menuDotsButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panel,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },

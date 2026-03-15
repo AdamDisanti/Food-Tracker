@@ -63,9 +63,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 10,
-    paddingBottom: 6,
-    paddingHorizontal: 26,
+    paddingTop: 6,
+    paddingBottom: 4,
+    paddingHorizontal: 22,
   },
   tab: {
     alignItems: 'center',
@@ -79,8 +79,8 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: colors.textSecondary,
-    fontSize: 30,
-    lineHeight: 32,
+    fontSize: 28,
+    lineHeight: 30,
   },
   iconOnlyTabActive: {
     backgroundColor: colors.panelMuted,
@@ -93,15 +93,15 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: colors.accent,
-    marginTop: -4,
+    marginTop: 2,
   },
   primaryActionTabActive: {
     opacity: 0.92,
   },
   primaryActionIcon: {
     color: '#FFFFFF',
-    fontSize: 34,
-    lineHeight: 36,
+    fontSize: 30,
+    lineHeight: 32,
     marginTop: -1,
   },
   diaryIconWrap: {
