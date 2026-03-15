@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { BottomNav } from './src/components/BottomNav';
 import { colors } from './src/theme/colors';
 import {
@@ -20,7 +20,6 @@ import {
   LoggedMealItem,
   updateLogItem,
 } from './src/api/logs';
-import { getApiBaseUrl } from './src/api/client';
 import { getGoals, saveGoals } from './src/api/goals';
 import {
   addFavorite,
@@ -333,8 +332,6 @@ export default function App() {
 
       {/* Bottom nav is fixed so screen switching stays consistent and predictable. */}
       <View style={styles.bottomNavShell}>
-        {dayError ? <Text style={styles.errorText}>API: {dayError}</Text> : null}
-        <Text style={styles.apiLabel}>API base: {getApiBaseUrl()}</Text>
         <BottomNav active={activeScreen} onSelect={setActiveScreen} />
       </View>
     </View>
@@ -403,23 +400,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  apiLabel: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 10,
-    textAlign: 'center',
-    marginTop: 4,
-  },
   bottomNavShell: {
+    backgroundColor: colors.panel,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingBottom: 8,
   },
 });
