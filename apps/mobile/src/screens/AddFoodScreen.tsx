@@ -111,7 +111,7 @@ export function AddFoodScreen({
   );
 
   return (
-    <ScreenContainer scroll={false} horizontalPadding={8}>
+    <ScreenContainer scroll={false}>
       <View style={styles.layout}>
         <View style={styles.headerBar}>
           <Pressable style={styles.backIconButton} onPress={onBack}>

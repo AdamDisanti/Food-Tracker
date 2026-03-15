@@ -2,11 +2,13 @@ import { PropsWithChildren } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { colors } from '../theme/colors';
 
+const DEFAULT_HORIZONTAL_PADDING = 8;
+
 // Reusable page wrapper to enforce consistent safe-area and background handling.
 export function ScreenContainer({
   children,
   scroll = true,
-  horizontalPadding = 16,
+  horizontalPadding = DEFAULT_HORIZONTAL_PADDING,
 }: PropsWithChildren<{ scroll?: boolean; horizontalPadding?: number }>) {
   return (
     <SafeAreaView style={styles.safeArea}>

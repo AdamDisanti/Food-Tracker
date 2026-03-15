@@ -82,7 +82,7 @@ export function SearchScreen({
   }, [query, sourceList, apiResults, tab, recentFoods, favoriteFoods]);
 
   return (
-    <ScreenContainer horizontalPadding={8}>
+    <ScreenContainer>
       <View style={styles.headerBar}>
         <Pressable style={styles.backIconButton} onPress={onBack}>
           <Text style={styles.backIcon}>←</Text>
