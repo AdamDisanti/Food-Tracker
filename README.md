@@ -14,7 +14,7 @@
 3. Start PostgreSQL (Docker): `npm run db:up`
 4. Apply Prisma migration to local DB: `npm run db:migrate`
 5. Start API: `npm run dev:api`
-6. Start mobile: `npm run dev:mobile`
+6. Start mobile sim: `npm run dev:mobile` ->> npm run --workspace @food-tracker/mobile --ios
 
 ## Validate setup
 - `npm run lint`
