@@ -117,18 +117,19 @@ export function AddFoodScreen({
           <Pressable style={styles.backIconButton} onPress={onBack}>
             <Text style={styles.backIcon}>←</Text>
           </Pressable>
+
+          <View style={styles.titleWrap}>
+            <Text style={styles.headerTitle} numberOfLines={2}>
+              {food?.name ?? 'Search and Select Food'}
+            </Text>
+          </View>
+
+          <View style={styles.menuDotsButton}>
+            <Text style={styles.menuDotsLabel}>⋯</Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <SectionCard title="Add Food">
-            <Text style={styles.foodName}>{food?.name ?? 'Select food from search'}</Text>
-            <Text style={styles.subtitle}>
-              {mode === 'edit'
-                ? 'Edit an existing diary entry.'
-                : 'Fast entry flow optimized for meal logging.'}
-            </Text>
-          </SectionCard>
-
           <SectionCard title="Entry Details">
             <FoodEntryDetailsForm
               amount={amount}
@@ -185,25 +186,18 @@ export function AddFoodScreen({
 }
 
 const styles = StyleSheet.create({
-  foodName: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
   layout: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingBottom: 16,
   },
   headerRow: {
-    paddingTop: 4,
-    paddingBottom: 10,
+    paddingTop: 6,
+    paddingBottom: 12,
+    paddingHorizontal: 4,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
   backIconButton: {
     width: 36,
@@ -221,8 +215,41 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '700',
   },
+  titleWrap: {
+    flex: 1,
+    minHeight: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+  menuDotsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuDotsLabel: {
+    color: colors.textSecondary,
+    fontSize: 22,
+    lineHeight: 22,
+    marginTop: -6,
+  },
   scrollContent: {
-    gap: 14,
+    gap: 12,
     paddingBottom: 120,
   },
   actionRow: {

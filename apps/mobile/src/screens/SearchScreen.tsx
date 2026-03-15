@@ -87,6 +87,15 @@ export function SearchScreen({
         <Pressable style={styles.backIconButton} onPress={onBack}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
+
+        <View style={styles.titleWrap}>
+          <Text style={styles.headerTitle}>Search Foods</Text>
+          <Text style={styles.headerSubtitle}>Find and save foods quickly</Text>
+        </View>
+
+        <View style={styles.menuDotsButton}>
+          <Text style={styles.menuDotsLabel}>⋯</Text>
+        </View>
       </View>
 
       <SectionCard title="Search Food">
@@ -141,6 +150,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
   backIconButton: {
     width: 36,
@@ -157,6 +167,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 22,
     fontWeight: '700',
+  },
+  titleWrap: {
+    flex: 1,
+    minHeight: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  menuDotsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuDotsLabel: {
+    color: colors.textSecondary,
+    fontSize: 22,
+    lineHeight: 22,
+    marginTop: -6,
   },
   searchInput: {
     borderWidth: 1,
