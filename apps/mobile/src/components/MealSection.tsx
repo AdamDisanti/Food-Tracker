@@ -56,7 +56,7 @@ export function MealSection({
         items.map((item) => (
           <Pressable
             key={item.id}
-            style={[styles.itemRow, draggingItemId === item.id && styles.draggingRow]}
+            style={[styles.itemRow, draggingItemId === item.id && styles.draggingRowHidden]}
             onPress={() => {
               if (draggingItemId === item.id) {
                 return;
@@ -148,9 +148,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 4,
   },
-  draggingRow: {
-    borderColor: colors.accent,
-    opacity: 0.55,
+  draggingRowHidden: {
+    opacity: 0,
   },
   dropTargetContainer: {
     borderColor: colors.accent,
