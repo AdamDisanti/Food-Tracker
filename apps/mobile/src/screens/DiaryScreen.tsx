@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MacroGoals, MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
@@ -24,10 +25,7 @@ export function DiaryScreen({
   onNextMonth,
   onAddFromGroup,
   onEditLoggedItem,
-  onStartDragItem,
-  onDropToGroup,
-  onCancelDrag,
-  draggingItem,
+  onMoveLoggedItem,
   mealItems,
   totals,
   goals,
@@ -46,14 +44,90 @@ export function DiaryScreen({
   onNextMonth: () => void;
   onAddFromGroup: (group: MealGroup) => void;
   onEditLoggedItem: (item: LoggedMealItem) => void;
-  onStartDragItem: (item: LoggedMealItem) => void;
-  onDropToGroup: (group: MealGroup) => void;
-  onCancelDrag: () => void;
-  draggingItem: LoggedMealItem | null;
+  onMoveLoggedItem: (item: LoggedMealItem, targetGroup: MealGroup) => void;
   mealItems: Record<MealGroup, LoggedMealItem[]>;
   totals: { calories: number; protein: number; carbs: number; fat: number };
   goals?: MacroGoals;
 }) {
+  const [drag, setDrag] = useState<{
+    item: LoggedMealItem;
+    sourceGroup: MealGroup;
+    x: number;
+    y: number;
+    targetGroup: MealGroup | null;
+  } | null>(null);
+
+  const [dropZones, setDropZones] = useState<Partial<Record<MealGroup, { x: number; y: number; width: number; height: number }>>>({});
+
+  const activeDropTarget = drag?.targetGroup ?? null;
+
+  const dragHint = useMemo(() => {
+    if (!drag) {
+      return null;
+    }
+
+    return `${drag.item.foodName} (${drag.item.amount} ${drag.item.servingUnit})`;
+  }, [drag]);
+
+  const resolveTargetGroup = (x: number, y: number): MealGroup | null => {
+    const groups: MealGroup[] = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+    for (const group of groups) {
+      const zone = dropZones[group];
+      if (!zone) {
+        continue;
+      }
+
+      const withinX = x >= zone.x && x <= zone.x + zone.width;
+      const withinY = y >= zone.y && y <= zone.y + zone.height;
+      if (withinX && withinY) {
+        return group;
+      }
+    }
+
+    return null;
+  };
+
+  const startDrag = (item: LoggedMealItem, pageX: number, pageY: number) => {
+    const sourceGroup = toUiMealGroup(item.mealGroup);
+    setDrag({
+      item,
+      sourceGroup,
+      x: pageX,
+      y: pageY,
+      targetGroup: null,
+    });
+  };
+
+  const moveDrag = (pageX: number, pageY: number) => {
+    setDrag((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        x: pageX,
+        y: pageY,
+        targetGroup: resolveTargetGroup(pageX, pageY),
+      };
+    });
+  };
+
+  const endDrag = () => {
+    setDrag((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      const target = prev.targetGroup;
+      if (target && target !== prev.sourceGroup) {
+        onMoveLoggedItem(prev.item, target);
+      }
+
+      return null;
+    });
+  };
+
   return (
     <ScreenContainer>
       {/* Milestone 5: compact date header card by removing redundant title/helper copy. */}
@@ -78,17 +152,6 @@ export function DiaryScreen({
       </SectionCard>
 
       <SectionCard title="Meals">
-        {draggingItem ? (
-          <View style={styles.dragBanner}>
-            <Text style={styles.dragBannerText}>
-              Dragging: {draggingItem.foodName}. Drop into another meal section.
-            </Text>
-            <Pressable onPress={onCancelDrag} style={styles.dragCancelButton}>
-              <Text style={styles.dragCancelLabel}>Cancel</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
         {(['Breakfast', 'Lunch', 'Dinner', 'Snacks'] as MealGroup[]).map((group) => (
           <MealSection
             key={group}
@@ -96,13 +159,31 @@ export function DiaryScreen({
             items={mealItems[group]}
             onAddPress={onAddFromGroup}
             onItemPress={onEditLoggedItem}
-            onStartDrag={onStartDragItem}
-            onDropToGroup={onDropToGroup}
-            draggingItemId={draggingItem?.id}
-            draggingFromGroup={draggingItem ? toUiMealGroup(draggingItem.mealGroup) : null}
+            draggingItemId={drag?.item.id ?? null}
+            activeDropTarget={activeDropTarget}
+            onDragStart={startDrag}
+            onDragMove={moveDrag}
+            onDragEnd={endDrag}
+            onReportDropZone={(zone: { x: number; y: number; width: number; height: number }) => {
+              setDropZones((prev) => ({
+                ...prev,
+                [group]: zone,
+              }));
+            }}
           />
         ))}
       </SectionCard>
+
+      {drag ? (
+        <View pointerEvents="none" style={styles.dragGhostWrap}>
+          <View style={[styles.dragGhost, { left: 10, right: 10, top: Math.max(6, drag.y - 24) }]}>
+            <Text style={styles.dragGhostText} numberOfLines={1}>{dragHint}</Text>
+            <Text style={styles.dragGhostTarget}>
+              {activeDropTarget ? `Drop into ${activeDropTarget}` : 'Drag over a meal section and release'}
+            </Text>
+          </View>
+        </View>
+      ) : null}
 
       <CalendarModal
         visible={calendarVisible}
@@ -188,31 +269,26 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '700',
   },
-  dragBanner: {
+  dragGhostWrap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  dragGhost: {
+    position: 'absolute',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.accent,
-    borderRadius: 10,
-    backgroundColor: colors.panelMuted,
-    padding: 10,
-    gap: 8,
-  },
-  dragBannerText: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  dragCancelButton: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.panel,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 4,
   },
-  dragCancelLabel: {
-    color: colors.textSecondary,
+  dragGhostText: {
+    color: colors.textPrimary,
     fontWeight: '700',
+    fontSize: 13,
+  },
+  dragGhostTarget: {
+    color: colors.textSecondary,
     fontSize: 12,
   },
   menuOverlay: {

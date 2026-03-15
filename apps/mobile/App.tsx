@@ -48,7 +48,6 @@ export default function App() {
   const [selectedMealGroup, setSelectedMealGroup] = useState<MealGroup>('Lunch');
   const [selectedFood, setSelectedFood] = useState<FoodSearchItem | null>(null);
   const [editingLogItem, setEditingLogItem] = useState<LoggedMealItem | null>(null);
-  const [draggingItem, setDraggingItem] = useState<LoggedMealItem | null>(null);
   const [dayMeals, setDayMeals] = useState<Record<MealGroup, LoggedMealItem[]>>(emptyMeals);
   const [dayTotals, setDayTotals] = useState(emptyTotals);
   const [dayError, setDayError] = useState<string | null>(null);
@@ -191,23 +190,14 @@ export default function App() {
           onNextMonth={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
           onAddFromGroup={onMealAddPress}
           onEditLoggedItem={onEditLoggedItem}
-          onStartDragItem={setDraggingItem}
-          onCancelDrag={() => setDraggingItem(null)}
-          draggingItem={draggingItem}
-          onDropToGroup={(targetGroup) => {
-            if (!draggingItem) {
-              return;
-            }
-
-            const sourceGroup = toUiMealGroup(draggingItem.mealGroup);
+          onMoveLoggedItem={(item, targetGroup) => {
+            const sourceGroup = toUiMealGroup(item.mealGroup);
             if (sourceGroup === targetGroup) {
-              setDraggingItem(null);
               return;
             }
 
-            void updateLogItem(draggingItem.id, { mealGroup: targetGroup })
+            void updateLogItem(item.id, { mealGroup: targetGroup })
               .then(() => refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError))
-              .then(() => setDraggingItem(null))
               .catch((error: Error) => {
                 Alert.alert('Move Failed', error.message);
               });
