@@ -54,12 +54,15 @@ export function MealSection({
       {expanded ? (
         items.length > 0 ? (
         items
-          .filter((item) => item.id !== draggingItemId)
           .map((item) => (
             <Pressable
               key={item.id}
-              style={styles.itemRow}
+              style={[styles.itemRow, draggingItemId === item.id && styles.draggingRowCollapsed]}
               onPress={() => {
+                if (draggingItemId === item.id) {
+                  return;
+                }
+
                 onItemPress(item);
               }}
               onLongPress={(event) => {
@@ -73,6 +76,13 @@ export function MealSection({
                 onDragMove(event.nativeEvent.pageX, event.nativeEvent.pageY);
               }}
               onTouchEnd={() => {
+                if (draggingItemId !== item.id) {
+                  return;
+                }
+
+                onDragEnd();
+              }}
+              onTouchCancel={() => {
                 if (draggingItemId !== item.id) {
                   return;
                 }
@@ -145,6 +155,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     gap: 4,
+  },
+  draggingRowCollapsed: {
+    height: 0,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    borderWidth: 0,
+    opacity: 0,
+    overflow: 'hidden',
   },
   dropTargetContainer: {
     borderColor: colors.accent,
