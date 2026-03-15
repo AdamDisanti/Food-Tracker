@@ -6,6 +6,7 @@ import { SectionCard } from '../components/SectionCard';
 import { NutritionSummary } from '../components/NutritionSummary';
 import { MealSection } from '../components/MealSection';
 import { CalendarModal } from '../components/CalendarModal';
+import { LoggedMealItem } from '../api/logs';
 
 // Diary shell screen: date header, macro summary, meal sections, and add entry point.
 export function DiaryScreen({
@@ -22,6 +23,7 @@ export function DiaryScreen({
   onPrevMonth,
   onNextMonth,
   onAddFromGroup,
+  onEditLoggedItem,
   mealItems,
   totals,
   goals,
@@ -39,13 +41,15 @@ export function DiaryScreen({
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onAddFromGroup: (group: MealGroup) => void;
-  mealItems: Record<MealGroup, string[]>;
+  onEditLoggedItem: (item: LoggedMealItem) => void;
+  mealItems: Record<MealGroup, LoggedMealItem[]>;
   totals: { calories: number; protein: number; carbs: number; fat: number };
   goals?: MacroGoals;
 }) {
   return (
     <ScreenContainer>
-      <SectionCard title="Diary">
+      {/* Milestone 5: compact date header card by removing redundant title/helper copy. */}
+      <SectionCard>
         <View style={styles.headerRow}>
           <Pressable onPress={onPrevDay} style={styles.dateNavButton}>
             <Text style={styles.dateNavLabel}>‹</Text>
@@ -59,8 +63,6 @@ export function DiaryScreen({
             <Text style={styles.dateNavLabel}>›</Text>
           </Pressable>
         </View>
-
-        <Text style={styles.helperText}>Tap the date to open the calendar modal.</Text>
       </SectionCard>
 
       <SectionCard title="Nutrition Summary">
@@ -74,6 +76,7 @@ export function DiaryScreen({
             group={group}
             items={mealItems[group]}
             onAddPress={onAddFromGroup}
+            onItemPress={onEditLoggedItem}
           />
         ))}
       </SectionCard>
@@ -161,10 +164,6 @@ const styles = StyleSheet.create({
   dateLabel: {
     color: colors.textPrimary,
     fontWeight: '700',
-  },
-  helperText: {
-    color: colors.textSecondary,
-    fontSize: 12,
   },
   menuOverlay: {
     flex: 1,

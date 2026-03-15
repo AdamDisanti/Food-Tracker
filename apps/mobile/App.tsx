@@ -13,7 +13,13 @@ import { AddFoodScreen } from './src/screens/AddFoodScreen';
 import { DiaryScreen, AddActionMenu } from './src/screens/DiaryScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { createLogItem, getDayLog } from './src/api/logs';
+import {
+  createLogItem,
+  deleteLogItem,
+  getDayLog,
+  LoggedMealItem,
+  updateLogItem,
+} from './src/api/logs';
 import { getApiBaseUrl } from './src/api/client';
 import { getGoals, saveGoals } from './src/api/goals';
 import {
@@ -21,9 +27,9 @@ import {
   getFavorites,
   removeFavorite,
 } from './src/api/favorites';
-import { getRecentFoods } from './src/api/foods';
+import { getFoodDetail, getRecentFoods } from './src/api/foods';
 
-const emptyMeals: Record<MealGroup, string[]> = {
+const emptyMeals: Record<MealGroup, LoggedMealItem[]> = {
   Breakfast: [],
   Lunch: [],
   Dinner: [],
@@ -42,7 +48,8 @@ export default function App() {
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [selectedMealGroup, setSelectedMealGroup] = useState<MealGroup>('Lunch');
   const [selectedFood, setSelectedFood] = useState<FoodSearchItem | null>(null);
-  const [dayMeals, setDayMeals] = useState<Record<MealGroup, string[]>>(emptyMeals);
+  const [editingLogItem, setEditingLogItem] = useState<LoggedMealItem | null>(null);
+  const [dayMeals, setDayMeals] = useState<Record<MealGroup, LoggedMealItem[]>>(emptyMeals);
   const [dayTotals, setDayTotals] = useState(emptyTotals);
   const [dayError, setDayError] = useState<string | null>(null);
   const [goals, setGoals] = useState<MacroGoals | null>(null);
@@ -89,10 +96,10 @@ export default function App() {
         const data = await getDayLog(formatDateForApi(selectedDate));
         setDayTotals(data.totals);
         setDayMeals({
-          Breakfast: data.meals.breakfast.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-          Lunch: data.meals.lunch.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-          Dinner: data.meals.dinner.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-          Snacks: data.meals.snacks.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
+          Breakfast: data.meals.breakfast,
+          Lunch: data.meals.lunch,
+          Dinner: data.meals.dinner,
+          Snacks: data.meals.snacks,
         });
         setDayError(null);
       } catch (err) {
@@ -111,13 +118,53 @@ export default function App() {
   );
 
   const goToAddFromSearch = (food: FoodSearchItem) => {
+    // Search-driven add flow always starts a fresh entry, never an edit session.
+    setEditingLogItem(null);
+    // Show immediate selection feedback, then hydrate with detail servings when available.
     setSelectedFood(food);
     setActiveScreen('AddFood');
+
+    void getFoodDetail(food.id)
+      .then((detail) => {
+        setSelectedFood(detail);
+      })
+      .catch(() => {
+        // Keep shell responsive even if detail hydration fails.
+      });
   };
 
   const onMealAddPress = (group: MealGroup) => {
+    setEditingLogItem(null);
     setSelectedMealGroup(group);
     setAddMenuVisible(true);
+  };
+
+  const onEditLoggedItem = (item: LoggedMealItem) => {
+    // Rebuild a FoodSearchItem from persisted row details so AddFoodScreen can reuse preview logic.
+    setSelectedFood({
+      id: item.foodSourceId,
+      name: item.foodName,
+      subtitle: 'Logged item',
+      caloriesPerServing: item.caloriesPer100g,
+      proteinPer100g: item.proteinPer100g,
+      carbsPer100g: item.carbsPer100g,
+      fatPer100g: item.fatPer100g,
+      defaultServingAmount: item.defaultServingAmount,
+      defaultServingUnit: null,
+      servings: [],
+    });
+    setSelectedMealGroup(toUiMealGroup(item.mealGroup));
+    setEditingLogItem(item);
+    setActiveScreen('AddFood');
+
+    // Attempt detail hydration so edit flow can use real serving options when available.
+    void getFoodDetail(item.foodSourceId)
+      .then((detail) => {
+        setSelectedFood(detail);
+      })
+      .catch(() => {
+        // Keep edit flow usable with existing snapshot-backed fallback data.
+      });
   };
 
   return (
@@ -143,6 +190,7 @@ export default function App() {
           onPrevMonth={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
           onNextMonth={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
           onAddFromGroup={onMealAddPress}
+          onEditLoggedItem={onEditLoggedItem}
           mealItems={dayMeals}
           totals={dayTotals}
           goals={goals ?? undefined}
@@ -170,11 +218,48 @@ export default function App() {
         <AddFoodScreen
           food={selectedFood}
           defaultGroup={selectedMealGroup}
-          onBack={() => setActiveScreen('Search')}
+          mode={editingLogItem ? 'edit' : 'add'}
+          initialValues={
+            editingLogItem
+              ? {
+                  amount: editingLogItem.amount,
+                  servingUnit: editingLogItem.servingUnit,
+                  mealGroup: toUiMealGroup(editingLogItem.mealGroup),
+                }
+              : undefined
+          }
+          goals={goals}
+          onBack={() => {
+            setActiveScreen(editingLogItem ? 'Diary' : 'Search');
+            setEditingLogItem(null);
+          }}
+          onDelete={
+            editingLogItem
+              ? () => {
+                  void deleteLogItem(editingLogItem.id)
+                    .then(() => {
+                      setActiveScreen('Diary');
+                      setEditingLogItem(null);
+                      return Promise.all([
+                        refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError),
+                        getRecentFoods().then(setRecentFoods),
+                      ]).then(() => undefined);
+                    })
+                    .catch((error: Error) => {
+                      Alert.alert('Delete Failed', error.message);
+                    });
+                }
+              : undefined
+          }
           onSave={(input) => {
-            void saveFoodToDiary(input, selectedFood, selectedDate)
+            const operation = editingLogItem
+              ? updateExistingLogItem(editingLogItem.id, input)
+              : saveFoodToDiary(input, selectedFood, selectedDate);
+
+            void operation
               .then(() => {
                 setActiveScreen('Diary');
+                setEditingLogItem(null);
                 return Promise.all([
                   refreshDay(selectedDate, setDayTotals, setDayMeals, setDayError),
                   getRecentFoods().then(setRecentFoods),
@@ -250,21 +335,35 @@ async function saveFoodToDiary(input: AddFoodSaveInput, food: FoodSearchItem | n
   });
 }
 
+async function updateExistingLogItem(id: string, input: AddFoodSaveInput): Promise<void> {
+  await updateLogItem(id, {
+    mealGroup: input.mealGroup,
+    amount: input.amount,
+    servingUnit: input.servingUnit,
+    grams: input.grams,
+    loggedAt: input.loggedAt,
+  });
+}
+
 async function refreshDay(
   date: Date,
   setTotals: (totals: typeof emptyTotals) => void,
-  setMeals: (meals: Record<MealGroup, string[]>) => void,
+  setMeals: (meals: Record<MealGroup, LoggedMealItem[]>) => void,
   setError: (error: string | null) => void,
 ): Promise<void> {
   const data = await getDayLog(formatDateForApi(date));
   setTotals(data.totals);
   setMeals({
-    Breakfast: data.meals.breakfast.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-    Lunch: data.meals.lunch.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-    Dinner: data.meals.dinner.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
-    Snacks: data.meals.snacks.map((item) => `${item.foodName} (${item.amount} ${item.servingUnit})`),
+    Breakfast: data.meals.breakfast,
+    Lunch: data.meals.lunch,
+    Dinner: data.meals.dinner,
+    Snacks: data.meals.snacks,
   });
   setError(null);
+}
+
+function toUiMealGroup(group: 'breakfast' | 'lunch' | 'dinner' | 'snacks'): MealGroup {
+  return `${group[0].toUpperCase()}${group.slice(1)}` as MealGroup;
 }
 
 function addDays(date: Date, amount: number): Date {

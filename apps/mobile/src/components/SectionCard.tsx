@@ -3,10 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 
 // Generic card shell for grouped content blocks across screens.
-export function SectionCard({ title, children }: PropsWithChildren<{ title: string }>) {
+export function SectionCard({ title, children }: PropsWithChildren<{ title?: string }>) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
+      {title ? <Text style={styles.title}>{title}</Text> : null}
       <View style={styles.body}>{children}</View>
     </View>
   );

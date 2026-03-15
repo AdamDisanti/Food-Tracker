@@ -5,6 +5,7 @@ import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SectionCard } from '../components/SectionCard';
 import { searchFoods } from '../api/foods';
+import { FoodListItem } from '../components/FoodListItem';
 
 type SearchTab = 'All' | 'Favorites';
 
@@ -110,24 +111,15 @@ export function SearchScreen({
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
         {displayList.length > 0 ? (
           displayList.map((item) => (
-            <Pressable key={item.id} style={styles.row} onPress={() => onPickFood(item)}>
-              <View>
-                <Text style={styles.foodName}>{item.name}</Text>
-                {!!item.subtitle && <Text style={styles.subtitle}>{item.subtitle}</Text>}
-              </View>
-              <View style={styles.rowRight}>
-                <Text style={styles.kcalLabel}>{item.caloriesPerServing} kcal</Text>
-                <Pressable
-                  onPress={() => {
-                    const currentlyFavorite = favoriteIds.has(item.id);
-                    void onToggleFavorite(item, !currentlyFavorite);
-                  }}
-                  style={styles.favoriteButton}
-                >
-                  <Text style={styles.favoriteText}>{favoriteIds.has(item.id) ? '★' : '☆'}</Text>
-                </Pressable>
-              </View>
-            </Pressable>
+            <FoodListItem
+              key={item.id}
+              item={item}
+              onPress={onPickFood}
+              isFavorite={favoriteIds.has(item.id)}
+              onToggleFavorite={(food, nextFavoriteState) => {
+                void onToggleFavorite(food, nextFavoriteState);
+              }}
+            />
           ))
         ) : (
           <Text style={styles.emptyText}>No foods found for this query.</Text>
@@ -169,48 +161,6 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: colors.textPrimary,
-  },
-  row: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panelMuted,
-    padding: 11,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rowRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  foodName: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    marginTop: 2,
-    fontSize: 12,
-  },
-  kcalLabel: {
-    color: colors.warning,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  favoriteButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: colors.panel,
-  },
-  favoriteText: {
-    color: colors.textPrimary,
-    fontSize: 14,
   },
   emptyText: {
     color: colors.textSecondary,

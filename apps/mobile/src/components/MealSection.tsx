@@ -1,16 +1,19 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
+import { LoggedMealItem } from '../api/logs';
 
 // Meal section card used on the diary screen for each meal group bucket.
 export function MealSection({
   group,
   items,
   onAddPress,
+  onItemPress,
 }: {
   group: MealGroup;
-  items: string[];
+  items: LoggedMealItem[];
   onAddPress: (group: MealGroup) => void;
+  onItemPress: (item: LoggedMealItem) => void;
 }) {
   return (
     <View style={styles.container}>
@@ -23,9 +26,16 @@ export function MealSection({
 
       {items.length > 0 ? (
         items.map((item) => (
-          <Text key={item} style={styles.itemLabel}>
-            • {item}
-          </Text>
+          <Pressable
+            key={item.id}
+            style={styles.itemRow}
+            onPress={() => onItemPress(item)}
+          >
+            <Text style={styles.itemLabel}>
+              • {item.foodName} ({item.amount} {item.servingUnit})
+            </Text>
+            <Text style={styles.itemHint}>Tap to edit</Text>
+          </Pressable>
         ))
       ) : (
         <Text style={styles.emptyState}>No foods logged yet.</Text>
@@ -67,6 +77,19 @@ const styles = StyleSheet.create({
   itemLabel: {
     color: colors.textPrimary,
     fontSize: 14,
+  },
+  itemRow: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panelMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  itemHint: {
+    color: colors.textSecondary,
+    fontSize: 11,
   },
   emptyState: {
     color: colors.textSecondary,

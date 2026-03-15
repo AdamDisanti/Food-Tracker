@@ -1,6 +1,7 @@
 export interface LoggedItemDto {
   id: string;
   foodId: string;
+  foodSourceId: string;
   foodName: string;
   mealGroup: 'breakfast' | 'lunch' | 'dinner' | 'snacks';
   amount: number;
@@ -11,6 +12,11 @@ export interface LoggedItemDto {
   protein: number;
   carbs: number;
   fat: number;
+  caloriesPer100g: number;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  defaultServingAmount: number | null;
 }
 
 export interface DayTotalsDto {

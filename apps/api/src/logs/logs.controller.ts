@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CreateLogItemDto } from './dto/create-log-item.dto';
 import { DayLogResponseDto, LoggedItemDto } from './dto/day-log-response.dto';
 import { GetDayQueryDto } from './dto/get-day-query.dto';
+import { UpdateLogItemDto } from './dto/update-log-item.dto';
 import { LogsService } from './logs.service';
 
 @Controller('logs')
@@ -16,5 +27,19 @@ export class LogsController {
   @Get('day')
   getDay(@Query() query: GetDayQueryDto): Promise<DayLogResponseDto> {
     return this.logsService.getDay(query.date);
+  }
+
+  @Patch('items/:id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateLogItemDto,
+  ): Promise<LoggedItemDto> {
+    return this.logsService.updateLogItem(id, dto);
+  }
+
+  @Delete('items/:id')
+  @HttpCode(204)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.logsService.deleteLogItem(id);
   }
 }
