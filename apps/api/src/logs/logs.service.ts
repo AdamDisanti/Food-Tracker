@@ -4,6 +4,7 @@ import { FoodsService } from '../foods/foods.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLogItemDto } from './dto/create-log-item.dto';
 import { DayLogResponseDto, LoggedItemDto } from './dto/day-log-response.dto';
+import { UpdateLogItemDto } from './dto/update-log-item.dto';
 
 function toStartOfDay(dateLike: string | Date): Date {
   const date = new Date(dateLike);
@@ -25,6 +26,53 @@ function normalizeFoodLookupId(foodId: string): {
   }
 
   return { sourceId: foodId, localId: foodId };
+}
+
+/**
+ * Shared mapper keeps response shape consistent between create/update/day endpoints.
+ */
+function mapMealLogItemToDto(item: {
+  id: string;
+  foodId: string;
+  mealGroup: MealGroup;
+  amount: number;
+  servingUnit: string;
+  grams: number;
+  loggedAt: Date;
+  caloriesSnapshot: number;
+  proteinSnapshot: number;
+  carbsSnapshot: number;
+  fatSnapshot: number;
+  food: {
+    name: string;
+    sourceId: string;
+    caloriesPer100g: number;
+    proteinPer100g: number;
+    carbsPer100g: number;
+    fatPer100g: number;
+    defaultServingAmount: number | null;
+  };
+}): LoggedItemDto {
+  return {
+    id: item.id,
+    foodId: item.foodId,
+    foodSourceId: item.food.sourceId,
+    foodName: item.food.name,
+    mealGroup: item.mealGroup,
+    amount: item.amount,
+    servingUnit: item.servingUnit,
+    grams: item.grams,
+    loggedAt: item.loggedAt.toISOString(),
+    calories: item.caloriesSnapshot,
+    protein: item.proteinSnapshot,
+    carbs: item.carbsSnapshot,
+    fat: item.fatSnapshot,
+    caloriesPer100g: item.food.caloriesPer100g,
+    proteinPer100g: item.food.proteinPer100g,
+    carbsPer100g: item.food.carbsPer100g,
+    fatPer100g: item.food.fatPer100g,
+    defaultServingAmount: item.food.defaultServingAmount,
+  };
 }
 
 @Injectable()
@@ -102,20 +150,69 @@ export class LogsService {
       },
     });
 
-    return {
-      id: item.id,
-      foodId: item.foodId,
-      foodName: item.food.name,
-      mealGroup: item.mealGroup,
-      amount: item.amount,
-      servingUnit: item.servingUnit,
-      grams: item.grams,
-      loggedAt: item.loggedAt.toISOString(),
-      calories: item.caloriesSnapshot,
-      protein: item.proteinSnapshot,
-      carbs: item.carbsSnapshot,
-      fat: item.fatSnapshot,
-    };
+    return mapMealLogItemToDto(item);
+  }
+
+  async updateLogItem(
+    id: string,
+    input: UpdateLogItemDto,
+  ): Promise<LoggedItemDto> {
+    const existing = await this.prisma.mealLogItem.findUnique({
+      where: { id },
+      include: { food: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Log item '${id}' was not found.`);
+    }
+
+    // Use current values as defaults so callers can patch only changed fields.
+    const nextMealGroup =
+      (input.mealGroup as MealGroup | undefined) ?? existing.mealGroup;
+    const nextAmount = input.amount ?? existing.amount;
+    const nextServingUnit = input.servingUnit ?? existing.servingUnit;
+    const nextGrams = input.grams ?? existing.grams;
+    const nextLoggedAt = input.loggedAt
+      ? new Date(input.loggedAt)
+      : existing.loggedAt;
+
+    // Keep snapshot math aligned with create flow and current food nutrition values.
+    const factor = nextGrams / 100;
+    const calories = toRounded(existing.food.caloriesPer100g * factor);
+    const protein = toRounded(existing.food.proteinPer100g * factor);
+    const carbs = toRounded(existing.food.carbsPer100g * factor);
+    const fat = toRounded(existing.food.fatPer100g * factor);
+
+    const updated = await this.prisma.mealLogItem.update({
+      where: { id },
+      data: {
+        mealGroup: nextMealGroup,
+        amount: nextAmount,
+        servingUnit: nextServingUnit,
+        grams: nextGrams,
+        loggedAt: nextLoggedAt,
+        caloriesSnapshot: calories,
+        proteinSnapshot: protein,
+        carbsSnapshot: carbs,
+        fatSnapshot: fat,
+      },
+      include: { food: true },
+    });
+
+    return mapMealLogItemToDto(updated);
+  }
+
+  async deleteLogItem(id: string): Promise<void> {
+    const existing = await this.prisma.mealLogItem.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Log item '${id}' was not found.`);
+    }
+
+    await this.prisma.mealLogItem.delete({ where: { id } });
   }
 
   async getDay(dateString: string): Promise<DayLogResponseDto> {
@@ -148,20 +245,8 @@ export class LogsService {
       };
     }
 
-    const mapped = dailyLog.mealLogItems.map<LoggedItemDto>((item) => ({
-      id: item.id,
-      foodId: item.foodId,
-      foodName: item.food.name,
-      mealGroup: item.mealGroup,
-      amount: item.amount,
-      servingUnit: item.servingUnit,
-      grams: item.grams,
-      loggedAt: item.loggedAt.toISOString(),
-      calories: item.caloriesSnapshot,
-      protein: item.proteinSnapshot,
-      carbs: item.carbsSnapshot,
-      fat: item.fatSnapshot,
-    }));
+    const mapped =
+      dailyLog.mealLogItems.map<LoggedItemDto>(mapMealLogItemToDto);
 
     const totals = mapped.reduce(
       (acc, item) => ({

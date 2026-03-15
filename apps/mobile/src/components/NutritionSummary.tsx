@@ -3,7 +3,8 @@ import { MacroGoals, MacroTotals } from '../types/app';
 import { colors } from '../theme/colors';
 
 function ProgressRow({ label, value, goal }: { label: string; value: number; goal: number }) {
-  const ratio = Math.min(value / goal, 1);
+  // Guard for zero goals so the progress bar never renders NaN/Infinity widths.
+  const ratio = goal > 0 ? Math.min(value / goal, 1) : 0;
   return (
     <View style={styles.progressRow}>
       <View style={styles.progressLabelRow}>
@@ -19,15 +20,10 @@ function ProgressRow({ label, value, goal }: { label: string; value: number; goa
 
 // Displays consumed macros and optional goal-based progress bars.
 export function NutritionSummary({ totals, goals }: { totals: MacroTotals; goals?: MacroGoals }) {
+  // Milestone 5 compact mode: remove metric tiles and keep concise progress rows only.
+  // If goals are absent, we fall back to text totals to avoid rendering empty tracks.
   return (
     <View style={styles.container}>
-      <View style={styles.grid}>
-        <MetricTile label="Calories" value={totals.calories} />
-        <MetricTile label="Protein" value={totals.protein} suffix="g" />
-        <MetricTile label="Carbs" value={totals.carbs} suffix="g" />
-        <MetricTile label="Fat" value={totals.fat} suffix="g" />
-      </View>
-
       {goals ? (
         <View style={styles.progressSection}>
           <ProgressRow label="Calories" value={totals.calories} goal={goals.calories} />
@@ -35,37 +31,21 @@ export function NutritionSummary({ totals, goals }: { totals: MacroTotals; goals
           <ProgressRow label="Carbs" value={totals.carbs} goal={goals.carbs} />
           <ProgressRow label="Fat" value={totals.fat} goal={goals.fat} />
         </View>
-      ) : null}
-    </View>
-  );
-}
-
-function MetricTile({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
-  return (
-    <View style={styles.tile}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}{suffix}</Text>
+      ) : (
+        <View style={styles.progressSection}>
+          <Text style={styles.metricValue}>Calories: {totals.calories}</Text>
+          <Text style={styles.metricValue}>Protein: {totals.protein}g</Text>
+          <Text style={styles.metricValue}>Carbs: {totals.carbs}g</Text>
+          <Text style={styles.metricValue}>Fat: {totals.fat}g</Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tile: {
-    flexBasis: '48%',
-    flexGrow: 1,
-    backgroundColor: colors.panelMuted,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
+    gap: 6,
   },
   metricLabel: {
     color: colors.textSecondary,
@@ -73,12 +53,11 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: colors.textPrimary,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
   },
   progressSection: {
-    gap: 8,
+    gap: 6,
   },
   progressRow: {
     gap: 4,
