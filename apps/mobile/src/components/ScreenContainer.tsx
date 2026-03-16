@@ -1,5 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
 
 const DEFAULT_HORIZONTAL_PADDING = 8;
@@ -12,30 +13,43 @@ export function ScreenContainer({
   horizontalPadding = DEFAULT_HORIZONTAL_PADDING,
 }: PropsWithChildren<{ scroll?: boolean; scrollEnabled?: boolean; horizontalPadding?: number }>) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
-      {scroll ? (
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingHorizontal: horizontalPadding },
-          ]}
-          scrollEnabled={scrollEnabled}
-          showsVerticalScrollIndicator={false}
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.fill, { paddingHorizontal: horizontalPadding }]}>{children}</View>
-      )}
-    </SafeAreaView>
+    <View style={styles.root}>
+      <LinearGradient
+        colors={[colors.bgGradientTop, colors.bgGradientMid, colors.bgGradientBottom]}
+        locations={[0, 0.48, 1]}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+      />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" />
+        {scroll ? (
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingHorizontal: horizontalPadding },
+            ]}
+            scrollEnabled={scrollEnabled}
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.fill, { paddingHorizontal: horizontalPadding }]}>{children}</View>
+        )}
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   fill: {
     flex: 1,
