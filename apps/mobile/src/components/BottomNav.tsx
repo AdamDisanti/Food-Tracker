@@ -83,7 +83,9 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   iconOnlyTabActive: {
-    backgroundColor: colors.panelMuted,
+    backgroundColor: 'rgba(120, 170, 235, 0.18)',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   iconActive: {
     color: colors.textPrimary,
@@ -94,6 +96,11 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: colors.accent,
     marginTop: 2,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   primaryActionTabActive: {
     opacity: 0.92,

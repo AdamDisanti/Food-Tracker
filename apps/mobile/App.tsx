@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { BottomNav } from './src/components/BottomNav';
 import { colors } from './src/theme/colors';
+import { GlassSurface } from './src/components/GlassSurface';
 import {
   AddFoodSaveInput,
   FoodSearchItem,
@@ -330,9 +331,9 @@ export default function App() {
       />
 
       {/* Bottom nav is fixed so screen switching stays consistent and predictable. */}
-      <View style={styles.bottomNavShell}>
+      <GlassSurface style={styles.bottomNavShell}>
         <BottomNav active={activeScreen} onSelect={setActiveScreen} />
-      </View>
+      </GlassSurface>
     </View>
   );
 }
@@ -400,9 +401,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   bottomNavShell: {
-    backgroundColor: colors.panel,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     paddingBottom: 4,

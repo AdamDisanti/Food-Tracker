@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, Text, View, Vibration } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { MacroGoals, MealGroup } from '../types/app';
 import { colors } from '../theme/colors';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -90,7 +91,7 @@ export function DiaryScreen({
 
   const startDrag = (item: LoggedMealItem, pageX: number, pageY: number) => {
     const sourceGroup = toUiMealGroup(item.mealGroup);
-    Vibration.vibrate(8);
+    void Haptics.selectionAsync();
     Animated.spring(liftAnim, {
       toValue: 1,
       useNativeDriver: true,
@@ -130,7 +131,7 @@ export function DiaryScreen({
 
       const target = prev.targetGroup;
       if (target && target !== prev.sourceGroup) {
-        Vibration.vibrate(12);
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onMoveLoggedItem(prev.item, target);
       }
 

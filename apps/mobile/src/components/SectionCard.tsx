@@ -1,24 +1,27 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { GlassSurface } from './GlassSurface';
 
 // Generic card shell for grouped content blocks across screens.
 export function SectionCard({ title, children }: PropsWithChildren<{ title?: string }>) {
   return (
-    <View style={styles.card}>
+    <GlassSurface style={styles.card}>
       {title ? <Text style={styles.title}>{title}</Text> : null}
       <View style={styles.body}>{children}</View>
-    </View>
+    </GlassSurface>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.panel,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 14,
     padding: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 7,
   },
   title: {
     color: colors.textPrimary,
